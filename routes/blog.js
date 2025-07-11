@@ -7,7 +7,6 @@ const Comment = require("../models/comment");
 
 const router = Router();
 
-// 🔧 Multer storage setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.resolve("./public/uploads/"));
@@ -33,6 +32,34 @@ router.get("/all", async (req, res) => {
         .limit(limit)
         .populate("createdBy"),
       Blog.countDocuments(),
+    ]);
+
+    const totalPages = Math.ceil(totalBlogs / limit);
+
+    return res.json({
+      blogs,
+      totalPages,
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/user", async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 2;
+  const skip = (page - 1) * limit;
+
+  try {
+    const [blogs, totalBlogs] = await Promise.all([
+      Blog.find({ createdBy: req.user._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("createdBy"),
+      Blog.countDocuments({ createdBy: req.user._id }),
     ]);
 
     const totalPages = Math.ceil(totalBlogs / limit);
@@ -127,7 +154,6 @@ router.post("/comment/:blogId", async (req, res) => {
   }
 });
 
-// ✅ Route for blog creation with file upload
 router.post("/", upload.single("coverImage"), async (req, res) => {
   const { title, body } = req.body;
 
