@@ -10,14 +10,23 @@ const { checkForAuthenticationCookie } = require("./middleware/authentication");
 const Blog = require("./models/blog");
 
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
-mongoose.connect("mongodb://localhost:27017/my_web_blog");
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log(" Connected to MongoDB Atlas"))
+  .catch((err) => console.error(" MongoDB connection error:", err));
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "https://startling-cucurucho-73b8a1.netlify.app"
+  ],
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -41,4 +50,4 @@ app.get("/home", async (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`Server Started at PORT:${PORT}`));
+app.listen(PORT, () => console.log(` Server Started at PORT: ${PORT}`));
