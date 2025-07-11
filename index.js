@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://startling-cucurucho-73b8a1.netlify.app"
+    "https://candid-lamington-2b18b0.netlify.app"
   ],
   credentials: true,
 }));
