@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
@@ -12,8 +13,14 @@ const Blog = require("./models/blog");
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log(" Connected to MongoDB Atlas"))
+const uri =
+  process.env.NODE_ENV === "development"
+    ? process.env.MONGO_URI_LOCAL
+    : process.env.MONGO_URI_CLOUD;
+
+mongoose
+  .connect(uri)
+  .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error(" MongoDB connection error:", err));
 
 app.use(cors({
