@@ -4,7 +4,6 @@ const { checkForAuthenticationCookie } = require("../middleware/authentication")
 
 const router = Router();
 
-// POST /user/signin
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
 
@@ -12,11 +11,11 @@ router.post("/signin", async (req, res) => {
     const token = await User.matchPasswordAndGenerateToken(email, password);
     const user = await User.findOne({ email }).select("-password");
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false, // set to true in production with HTTPS
-    });
+   res.cookie("token", token, {
+  httpOnly: true,
+  sameSite: "None",   // Allow cross-origin cookies
+  secure: true,       // Required for SameSite: None
+});
 
     return res.json({ success: true, user });
   } catch (error) {
