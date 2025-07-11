@@ -1,6 +1,8 @@
 const { Router } = require("express");
 const User = require("../models/user");
-const { checkForAuthenticationCookie } = require("../middleware/authentication");
+const {
+  checkForAuthenticationCookie,
+} = require("../middleware/authentication");
 
 const router = Router();
 
@@ -11,11 +13,11 @@ router.post("/signin", async (req, res) => {
     const token = await User.matchPasswordAndGenerateToken(email, password);
     const user = await User.findOne({ email }).select("-password");
 
-   res.cookie("token", token, {
-  httpOnly: true,
-  sameSite: "None",   // Allow cross-origin cookies
-  secure: true,       // Required for SameSite: None
-});
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+    });
 
     return res.json({ success: true, user });
   } catch (error) {
@@ -24,13 +26,16 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-// POST /user/signup
 router.post("/signup", async (req, res) => {
   const { fullName, email, password } = req.body;
 
   try {
     const user = await User.create({ fullName, email, password });
-    const cleanUser = { _id: user._id, fullName: user.fullName, email: user.email };
+    const cleanUser = {
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+    };
     return res.status(201).json({ success: true, user: cleanUser });
   } catch (error) {
     console.error("Signup failed:", error.message);
