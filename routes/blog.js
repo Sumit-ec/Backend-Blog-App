@@ -6,6 +6,8 @@ const Blog = require("../models/blog");
 const Comment = require("../models/comment");
 
 const router = Router();
+const { checkForAuthenticationCookie } = require("../middleware/authentication");
+const requireAuth = checkForAuthenticationCookie("token");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -18,6 +20,15 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+router.get("/liked", requireAuth, async (req, res) => {
+  try {
+    const likedBlogs = await Blog.find({ likes: req.user._id }).populate("createdBy");
+    res.json({ blogs: likedBlogs });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching liked blogs" });
+  }
+});
 
 router.get("/all", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -47,7 +58,7 @@ router.get("/all", async (req, res) => {
   }
 });
 
-router.get("/user", async (req, res) => {
+router.get("/user", requireAuth, async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 2;
   const skip = (page - 1) * limit;
@@ -75,7 +86,7 @@ router.get("/user", async (req, res) => {
   }
 });
 
-router.post("/like/:id", async (req, res) => {
+router.post("/like/:id", requireAuth, async (req, res) => {
   const blog = await Blog.findById(req.params.id);
   if (!blog) return res.status(404).json({ error: "Blog not found" });
 
@@ -92,7 +103,7 @@ router.post("/like/:id", async (req, res) => {
   return res.json({ success: true, likes: blog.likes, userId });
 });
 
-router.post("/dislike/:id", async (req, res) => {
+router.post("/dislike/:id", requireAuth, async (req, res) => {
   const blog = await Blog.findById(req.params.id);
   if (!blog) return res.status(404).json({ error: "Blog not found" });
 
@@ -113,11 +124,11 @@ router.post("/dislike/:id", async (req, res) => {
   return res.json({ success: true, dislikes: blog.dislikes });
 });
 
-router.get("/add-new", (req, res) => {
+router.get("/add-new", requireAuth, (req, res) => {
   return res.json({ user: req.user });
 });
 
-router.post("/add-new", async (req, res) => {
+router.post("/add-new", requireAuth, async (req, res) => {
   const { title, body } = req.body;
   const blog = await Blog.create({
     title,
@@ -141,7 +152,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/comment/:blogId", async (req, res) => {
+router.post("/comment/:blogId", requireAuth, async (req, res) => {
   try {
     const comment = await Comment.create({
       content: req.body.content,
@@ -154,7 +165,7 @@ router.post("/comment/:blogId", async (req, res) => {
   }
 });
 
-router.post("/", upload.single("coverImage"), async (req, res) => {
+router.post("/", requireAuth, upload.single("coverImage"), async (req, res) => {
   const { title, body } = req.body;
 
   try {
